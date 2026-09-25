@@ -17,3 +17,6 @@ class User(AbstractUser):
 
     def __str__(self):
         return f"{self.username} ({self.role})"
+
+
+# models.py files (like the User model I wrote) are just Python descriptions of what I want my database tables to look like. PostgreSQL doesn't understand Python — it only understands SQL. makemigrations is the translator that bridges this gap.
