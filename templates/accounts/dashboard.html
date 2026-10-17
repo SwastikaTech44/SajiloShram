@@ -1,0 +1,7 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="card">
+  <h2>Namaste, {{ user.username }}!</h2>
+  <p>You are logged in as a <strong>{{ user.role }}</strong>.</p>
+</div>
+{% endblock %}
