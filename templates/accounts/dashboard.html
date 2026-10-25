@@ -6,6 +6,7 @@
 
   {% if user.role == 'worker' %}
     <p><a href="{% url 'edit_profile' %}">Edit my profile</a></p>
+    <p><a href="{% url 'record_intro' %}">🎤 Record my voice intro</a></p>
     {% if user.worker_profile %}
       <p>Daily rate: Rs. {{ user.worker_profile.daily_rate }}</p>
       <p>Ward: {{ user.worker_profile.ward_no }}</p>

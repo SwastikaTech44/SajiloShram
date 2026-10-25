@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% block title %}Record Intro{% endblock %}
+{% block content %}
+<div class="card" style="text-align:center;">
+  <h2>Record your voice intro</h2>
+  <p>Speak for up to 30 seconds. Tell employers your skills and experience, in any language.</p>
+
+  <button id="recBtn" class="btn" style="font-size:22px; padding:24px;">🎤 Tap to start</button>
+  <p id="timer" style="font-size:20px;">0 / 30 s</p>
+  <p id="status"></p>
+
+  <audio id="preview" controls style="width:100%; display:none;"></audio>
+  <button id="saveBtn" class="btn" style="display:none; margin-top:12px;">Save intro</button>
+
+  <p><a href="{% url 'dashboard' %}">← Back to dashboard</a></p>
+</div>
+
+<script>
+  const MAX_SECONDS = 30;
+  let recorder, chunks = [], blob = null, seconds = 0, tick = null, stream = null;
+
+  const recBtn = document.getElementById('recBtn');
+  const saveBtn = document.getElementById('saveBtn');
+  const preview = document.getElementById('preview');
+  const timer = document.getElementById('timer');
+  const statusEl = document.getElementById('status');
+
+  recBtn.addEventListener('click', () => {
+    if (recorder && recorder.state === 'recording') {
+      recorder.stop();
+    } else {
+      startRecording();
+    }
+  });
+
+  async function startRecording() {
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (err) {
+      statusEl.textContent = 'Microphone blocked. Allow microphone access and try again.';
+      return;
+    }
+    chunks = [];
+    recorder = new MediaRecorder(stream);
+    recorder.ondataavailable = e => chunks.push(e.data);
+    recorder.onstop = () => {
+      clearInterval(tick);
+      stream.getTracks().forEach(t => t.stop());
+      blob = new Blob(chunks, { type: recorder.mimeType });
+      preview.src = URL.createObjectURL(blob);
+      preview.style.display = 'block';
+      saveBtn.style.display = 'block';
+      recBtn.textContent = '🎤 Record again';
+      statusEl.textContent = 'Listen to your recording, then save it.';
+    };
+    recorder.start();
+    seconds = 0;
+    timer.textContent = '0 / ' + MAX_SECONDS + ' s';
+    recBtn.textContent = '⏹ Tap to stop';
+    statusEl.textContent = 'Recording...';
+    tick = setInterval(() => {
+      seconds++;
+      timer.textContent = seconds + ' / ' + MAX_SECONDS + ' s';
+      if (seconds >= MAX_SECONDS) recorder.stop();
+    }, 1000);
+  }
+
+  saveBtn.addEventListener('click', async () => {
+    if (!blob) return;
+    const form = new FormData();
+    form.append('audio', blob, 'intro');
+    statusEl.textContent = 'Uploading...';
+    try {
+      const res = await fetch("{% url 'upload_audio' %}", {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+        body: form
+      });
+      const data = await res.json();
+      statusEl.textContent = data.ok ? '✅ Saved! Employers can now hear your intro.' : (data.error || 'Upload failed.');
+    } catch (e) {
+      statusEl.textContent = 'Network problem. Please try again.';
+    }
+  });
+</script>
+{% endblock %}
