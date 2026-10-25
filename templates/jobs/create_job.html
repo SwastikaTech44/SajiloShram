@@ -1,0 +1,8 @@
+<div class="card">
+  <h2>Post a new job</h2>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button class="btn" type="submit">Post Job</button>
+  </form>
+</div>

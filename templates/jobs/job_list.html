@@ -1,0 +1,16 @@
+<div class="card">
+  <h2>My posted jobs</h2>
+  <p><a href="{% url 'create_job' %}">+ Post a new job</a></p>
+  
+    <ul>
+      
+        <li>
+          <a href="{% url 'job_detail' job.id %}">{{ job.description|truncatechars:40 }}</a>
+          — Rs. {{ job.agreed_wage }} — <strong>{{ job.get_status_display }}</strong>
+        </li>
+     
+    </ul>
+  
+    <p>No jobs posted yet.</p>
+  
+</div>

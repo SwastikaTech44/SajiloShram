@@ -1,0 +1,8 @@
+
+<div class="card">
+  <h2>{{ job.description }}</h2>
+  <p>Worker: {{ job.worker }}</p>
+  <p>Wage: Rs. {{ job.agreed_wage }}</p>
+  <p>Status: <strong>{{ job.get_status_display }}</strong></p>
+  <p><a href="{% url 'job_list' %}">← Back to my jobs</a></p>
+</div>
