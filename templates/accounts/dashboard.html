@@ -2,6 +2,17 @@
 {% block content %}
 <div class="card">
   <h2>Namaste, {{ user.username }}!</h2>
-  <p>You are logged in as a <strong>{{ user.role }}</strong>.</p>
+  <p>You are logged in as a <strong>{{ user.get_role_display }}</strong>.</p>
+
+  {% if user.role == 'worker' %}
+    <p><a href="{% url 'edit_profile' %}">Edit my profile</a></p>
+    {% if user.worker_profile %}
+      <p>Daily rate: Rs. {{ user.worker_profile.daily_rate }}</p>
+      <p>Ward: {{ user.worker_profile.ward_no }}</p>
+    {% endif %}
+  {% else %}
+    <p><a href="{% url 'worker_list' %}">Browse workers</a></p>
+    <p><a href="{% url 'job_list' %}">My posted jobs</a></p>
+  {% endif %}
 </div>
 {% endblock %}

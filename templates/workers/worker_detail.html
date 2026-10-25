@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block title %}Worker Profile{% endblock %}
+{% block content %}
+<div class="card">
+  <h2>{{ worker.user.username }}</h2>
+  <p>Daily rate: Rs. {{ worker.daily_rate }}</p>
+  {% if worker.municipality %}<p>Location: {{ worker.municipality }}, Ward {{ worker.ward_no }}</p>{% endif %}
+  <p>Skills: {% for skill in worker.skills.all %}{{ skill.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
+  <p>NID status: <strong>{{ worker.get_nid_status_display }}</strong></p>
+  <p><a href="{% url 'worker_list' %}">← Back to workers</a></p>
+</div>
+{% endblock %}

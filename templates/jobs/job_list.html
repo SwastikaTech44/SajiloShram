@@ -1,16 +1,20 @@
+{% extends 'base.html' %}
+{% block title %}My Jobs{% endblock %}
+{% block content %}
 <div class="card">
   <h2>My posted jobs</h2>
   <p><a href="{% url 'create_job' %}">+ Post a new job</a></p>
-  
+  {% if jobs %}
     <ul>
-      
+      {% for job in jobs %}
         <li>
           <a href="{% url 'job_detail' job.id %}">{{ job.description|truncatechars:40 }}</a>
           — Rs. {{ job.agreed_wage }} — <strong>{{ job.get_status_display }}</strong>
         </li>
-     
+      {% endfor %}
     </ul>
-  
+  {% else %}
     <p>No jobs posted yet.</p>
-  
+  {% endif %}
 </div>
+{% endblock %}

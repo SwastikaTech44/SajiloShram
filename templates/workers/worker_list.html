@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block title %}Workers{% endblock %}
+{% block content %}
+<div class="card">
+  <h2>Browse workers</h2>
+  {% if workers %}
+    <ul>
+      {% for worker in workers %}
+        <li>
+          <a href="{% url 'worker_detail' worker.id %}">{{ worker.user.username }}</a>
+          — Rs. {{ worker.daily_rate }}/day
+          {% if worker.municipality %} — {{ worker.municipality }}{% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No workers registered yet.</p>
+  {% endif %}
+</div>
+{% endblock %}
