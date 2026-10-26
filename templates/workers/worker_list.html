@@ -1,20 +1,32 @@
 {% extends 'base.html' %}
-{% block title %}Workers{% endblock %}
+{% block title %}Find Workers{% endblock %}
 {% block content %}
 <div class="card">
-  <h2>Browse workers</h2>
+  <h2>Find workers near you</h2>
+
+  <form method="get">
+    {{ filter.form.as_p }}
+    <button class="btn" type="submit">Search</button>
+  </form>
+  <p><a href="{% url 'worker_list' %}">Clear filters</a></p>
+</div>
+
+<div class="card" style="margin-top:16px;">
+  <h3>{{ workers|length }} worker{{ workers|length|pluralize }} found</h3>
   {% if workers %}
     <ul>
       {% for worker in workers %}
-        <li>
-          <a href="{% url 'worker_detail' worker.id %}">{{ worker.user.username }}</a>
-          — Rs. {{ worker.daily_rate }}/day
-          {% if worker.municipality %} — {{ worker.municipality }}{% endif %}
+        <li style="margin-bottom:12px;">
+          <a href="{% url 'worker_detail' worker.id %}"><strong>{{ worker.user.username }}</strong></a>
+          {% if worker.audio_intro %}🎤{% endif %}<br>
+          Rs. {{ worker.daily_rate }}/day<br>
+          {% if worker.municipality %}{{ worker.municipality }}, Ward {{ worker.ward_no }}<br>{% endif %}
+          {% for skill in worker.skills.all %}{{ skill.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
         </li>
       {% endfor %}
     </ul>
   {% else %}
-    <p>No workers registered yet.</p>
+    <p>No workers match your search. Try removing a filter.</p>
   {% endif %}
 </div>
 {% endblock %}

@@ -1,7 +1,9 @@
-from django.http import JsonResponse
-from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
+from django.views.decorators.http import require_POST
+
+from .filters import WorkerFilter
 from .forms import WorkerProfileForm
 from .models import WorkerProfile
 
@@ -24,13 +26,23 @@ def edit_profile(request):
 
 @login_required
 def worker_list(request):
-    workers = WorkerProfile.objects.select_related('user', 'municipality').all()
-    return render(request, 'workers/worker_list.html', {'workers': workers})
+    base = (
+        WorkerProfile.objects
+        .select_related('user', 'municipality__district')
+        .prefetch_related('skills')
+        .order_by('daily_rate')
+    )
+    worker_filter = WorkerFilter(request.GET, queryset=base)
+    return render(request, 'workers/worker_list.html', {
+        'filter': worker_filter,
+        'workers': worker_filter.qs,
+    })
 
 
 def worker_detail(request, profile_id):
     worker = get_object_or_404(WorkerProfile, id=profile_id)
     return render(request, 'workers/worker_detail.html', {'worker': worker})
+
 
 @login_required
 @require_POST
