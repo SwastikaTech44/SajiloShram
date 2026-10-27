@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block title %}Pay into escrow{% endblock %}
+{% block content %}
+<div class="card">
+  <h2>Pay into escrow</h2>
+  <p>Job: {{ job.description|truncatechars:60 }}</p>
+  <p>Worker: <strong>{{ job.worker.username }}</strong></p>
+  <p>Amount: <strong>Rs. {{ job.agreed_wage }}</strong></p>
+  <p>Your money is held safely by SajiloShram. The worker is paid only after you confirm the work is done.</p>
+
+  <form method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn">Pay Rs. {{ job.agreed_wage }} into escrow</button>
+  </form>
+  <p><a href="{% url 'job_detail' job.pk %}">Cancel</a></p>
+</div>
+{% endblock %}

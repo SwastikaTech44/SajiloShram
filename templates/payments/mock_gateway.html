@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block title %}Test payment gateway{% endblock %}
+{% block content %}
+<div class="card">
+  <h2>Test payment gateway</h2>
+  <p><em>This is a simulated gateway. No real money moves.</em></p>
+  <p>Paying <strong>Rs. {{ txn.amount }}</strong> for: {{ txn.job.description|truncatechars:60 }}</p>
+
+  <form method="post">
+    {% csrf_token %}
+    <button name="outcome" value="success" class="btn">Simulate successful payment</button>
+  </form>
+  <form method="post" style="margin-top:10px;">
+    {% csrf_token %}
+    <button name="outcome" value="fail" class="btn" style="background:#c62828;">Simulate failed or cancelled payment</button>
+  </form>
+</div>
+{% endblock %}
