@@ -25,6 +25,10 @@
               <button name="action" value="decline">Decline</button>
             </form>
           {% endif %}
+
+          {% if user == job.employer and job.status == 'accepted' %}
+            <p><a href="{% url 'checkout' job.pk %}">Pay Rs. {{ job.agreed_wage }} into escrow</a></p>
+          {% endif %}
         </li>
       {% endfor %}
     </ul>
