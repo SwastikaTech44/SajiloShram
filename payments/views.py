@@ -1,3 +1,4 @@
+from django.views.decorators.http import require_POST
 from decimal import Decimal
 
 from django.conf import settings
@@ -16,6 +17,8 @@ from .services import (
     fail_escrow_payment,
     make_mock_reference,
     start_escrow_payment,
+    confirm_and_release,
+    mark_work_done,
 )
 
 
@@ -112,3 +115,29 @@ def esewa_success(request):
 def esewa_failure(request):
     messages.error(request, "The eSewa payment was cancelled or failed. You can try again.")
     return redirect("job_list")
+
+@login_required
+@require_POST
+def work_done(request, job_id):
+    job = get_object_or_404(Job, pk=job_id, worker=request.user)
+    try:
+        mark_work_done(job.pk, request.user)
+        messages.success(request, "Marked as done. Waiting for the employer to confirm.")
+    except PaymentError as exc:
+        messages.error(request, str(exc))
+    return redirect("job_detail", job_id=job.pk)
+
+
+@login_required
+@require_POST
+def confirm_release(request, job_id):
+    job = get_object_or_404(Job, pk=job_id, employer=request.user)
+    try:
+        amount = confirm_and_release(job.pk, request.user)
+        messages.success(
+            request,
+            f"Work confirmed. Rs. {amount} was released to {job.worker.username}'s wallet.",
+        )
+    except PaymentError as exc:
+        messages.error(request, str(exc))
+    return redirect("job_detail", job_id=job.pk)

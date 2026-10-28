@@ -22,6 +22,28 @@
 
   {% if job.status == 'funded' %}
     <p><em>Payment is held in escrow until the work is done and confirmed.</em></p>
+    {% if user == job.worker %}
+      <form method="post" action="{% url 'work_done' job.pk %}">
+        {% csrf_token %}
+        <button type="submit" class="btn">Mark work as done</button>
+      </form>
+    {% endif %}
+  {% endif %}
+
+  {% if job.status == 'work_done' %}
+    {% if user == job.employer %}
+      <p>The worker says the work is finished. Please check it, then confirm.</p>
+      <form method="post" action="{% url 'confirm_release' job.pk %}">
+        {% csrf_token %}
+        <button type="submit" class="btn">Confirm work and release Rs. {{ job.agreed_wage }}</button>
+      </form>
+    {% else %}
+      <p><em>Waiting for the employer to confirm the work.</em></p>
+    {% endif %}
+  {% endif %}
+
+  {% if job.status == 'completed' %}
+    <p><strong>Job completed. The payment was released to the worker.</strong></p>
   {% endif %}
 
   <p><a href="{% url 'job_list' %}">← Back to my jobs</a></p>

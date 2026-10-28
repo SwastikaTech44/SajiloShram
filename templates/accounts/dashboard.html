@@ -12,6 +12,7 @@
       <p>Daily rate: Rs. {{ user.worker_profile.daily_rate }}</p>
       <p>Ward: {{ user.worker_profile.ward_no }}</p>
     {% endif %}
+    <p>Wallet balance: <strong>Rs. {{ user.wallet.balance|default:0 }}</strong></p>
   {% else %}
     <p><a href="{% url 'worker_list' %}">Browse workers</a></p>
     <p><a href="{% url 'create_job' %}">+ Post a new job</a></p>
