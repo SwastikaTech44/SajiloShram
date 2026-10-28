@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block title %}Redirecting to eSewa{% endblock %}
+{% block content %}
+<div class="card">
+  <h2>Redirecting to eSewa…</h2>
+  <p>If nothing happens, press the button below.</p>
+
+  <form id="esewa-form" method="post" action="{{ action_url }}">
+    {% for name, value in fields.items %}
+      <input type="hidden" name="{{ name }}" value="{{ value }}">
+    {% endfor %}
+    <button type="submit" class="btn">Continue to eSewa</button>
+  </form>
+</div>
+<script>document.getElementById("esewa-form").submit();</script>
+{% endblock %}

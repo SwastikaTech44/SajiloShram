@@ -148,3 +148,9 @@ MEDIA_ROOT = BASE_DIR / 'media'
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL = 'login'
+
+# if you use os.getenv
+PAYMENT_GATEWAY = os.getenv('PAYMENT_GATEWAY', 'mock')
+ESEWA_PRODUCT_CODE = os.getenv('ESEWA_PRODUCT_CODE', 'EPAYTEST')
+ESEWA_SECRET_KEY = os.getenv('ESEWA_SECRET_KEY', '')
+ESEWA_FORM_URL = os.getenv('ESEWA_FORM_URL', '')

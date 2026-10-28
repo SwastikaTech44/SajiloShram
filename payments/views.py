@@ -1,9 +1,14 @@
+from decimal import Decimal
+
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 
 from jobs.models import Job
 
+from . import esewa
 from .models import Transaction
 from .services import (
     PaymentError,
@@ -28,6 +33,9 @@ def checkout(request, job_id):
         except PaymentError as exc:
             messages.error(request, str(exc))
             return redirect("job_detail", job_id=job.pk)
+        
+        if settings.PAYMENT_GATEWAY == "esewa":
+            return redirect("esewa_pay", txn_id=txn.pk)
         return redirect("mock_gateway", txn_id=txn.pk)
 
     return render(request, "payments/checkout.html", {"job": job})
@@ -56,3 +64,51 @@ def mock_gateway(request, txn_id):
         return redirect("job_detail", job_id=txn.job_id)
 
     return render(request, "payments/mock_gateway.html", {"txn": txn})
+
+@login_required
+def esewa_pay(request, txn_id):
+    txn = get_object_or_404(
+        Transaction,
+        pk=txn_id,
+        job__employer=request.user,
+        status=Transaction.Status.PENDING,
+    )
+    form = esewa.build_payment_form(
+        txn,
+        success_url=request.build_absolute_uri(reverse("esewa_success")),
+        failure_url=request.build_absolute_uri(reverse("esewa_failure")),
+    )
+    return render(request, "payments/esewa_redirect.html", form)
+
+
+@login_required
+def esewa_success(request):
+    try:
+        data = esewa.decode_and_verify(request.GET.get("data", ""))
+
+        if data["status"] != "COMPLETE":
+            raise esewa.EsewaError("eSewa did not mark this payment as complete.")
+        if data["product_code"] != settings.ESEWA_PRODUCT_CODE:
+            raise esewa.EsewaError("This payment was made to a different merchant.")
+
+        txn = Transaction.objects.get(pk=esewa.txn_id_from_uuid(data["transaction_uuid"]))
+
+        if esewa.to_decimal(data["total_amount"]) != Decimal(txn.amount):
+            raise esewa.EsewaError("The paid amount does not match the job wage.")
+
+        confirm_escrow_payment(txn.pk, request.user, data.get("transaction_code", ""))
+    except (esewa.EsewaError, PaymentError) as exc:
+        messages.error(request, str(exc))
+        return redirect("job_list")
+    except Transaction.DoesNotExist:
+        messages.error(request, "We could not find that payment.")
+        return redirect("job_list")
+
+    messages.success(request, "Payment received. The money is held in escrow.")
+    return redirect("job_detail", job_id=txn.job_id)
+
+
+@login_required
+def esewa_failure(request):
+    messages.error(request, "The eSewa payment was cancelled or failed. You can try again.")
+    return redirect("job_list")
