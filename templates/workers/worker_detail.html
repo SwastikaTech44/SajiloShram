@@ -8,6 +8,23 @@
   <p>Skills: {% for skill in worker.skills.all %}{{ skill.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
   <p>NID status: <strong>{{ worker.get_nid_status_display }}</strong></p>
 
+  {% with summary=worker.rating_summary %}
+    {% if summary.count %}
+      <p>Rating: <strong>★ {{ summary.average|floatformat:1 }}/5</strong> ({{ summary.count }} review{{ summary.count|pluralize }})</p>
+    {% else %}
+      <p><em>No reviews yet.</em></p>
+    {% endif %}
+  {% endwith %}
+
+  {% with reviews=worker.recent_reviews %}
+    {% if reviews %}
+      <h3>Recent reviews</h3>
+      {% for review in reviews %}
+        <p><strong>{{ review.rating }}/5</strong> by {{ review.reviewer.username }}{% if review.comment %} — {{ review.comment }}{% endif %}</p>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
   {% if worker.audio_intro %}
     <p>Voice intro:</p>
     <audio controls src="{{ worker.audio_intro.url }}" style="width:100%;"></audio>

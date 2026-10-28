@@ -44,6 +44,13 @@
 
   {% if job.status == 'completed' %}
     <p><strong>Job completed. The payment was released to the worker.</strong></p>
+
+    {% if job.review %}
+      <p>Rating: <strong>★ {{ job.review.rating }}/5</strong></p>
+      {% if job.review.comment %}<p>“{{ job.review.comment }}”</p>{% endif %}
+    {% elif user == job.employer %}
+      <p><a href="{% url 'review_job' job.pk %}">Rate this worker</a></p>
+    {% endif %}
   {% endif %}
 
   <p><a href="{% url 'job_list' %}">← Back to my jobs</a></p>

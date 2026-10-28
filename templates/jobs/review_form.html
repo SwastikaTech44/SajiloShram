@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title %}Rate the worker{% endblock %}
+{% block content %}
+<div class="card">
+  <h2>Rate {{ job.worker.username }}</h2>
+  <p>Job: {{ job.description|truncatechars:60 }}</p>
+
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn">Submit review</button>
+  </form>
+  <p><a href="{% url 'job_detail' job.pk %}">Cancel</a></p>
+</div>
+{% endblock %}

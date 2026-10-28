@@ -6,8 +6,10 @@ from django.views.decorators.http import require_POST
 
 from workers.models import WorkerProfile
 
-from .forms import JobForm, HireRequestForm
-from .models import Job
+from django.db import IntegrityError, transaction
+
+from .forms import JobForm, HireRequestForm, ReviewForm
+from .models import Job, Review
 
 
 @login_required
@@ -91,3 +93,35 @@ def respond_job(request, pk):
     except ValueError:
         messages.error(request, 'This request can no longer be changed.')
     return redirect('job_list')
+
+
+@login_required
+def review_job(request, job_id):
+    job = get_object_or_404(Job, pk=job_id, employer=request.user)
+
+    if job.status != Job.Status.COMPLETED:
+        messages.error(request, "You can review a worker only after the job is completed.")
+        return redirect("job_detail", job_id=job.pk)
+
+    if Review.objects.filter(job=job).exists():
+        messages.error(request, "You have already reviewed this job.")
+        return redirect("job_detail", job_id=job.pk)
+
+    if request.method == "POST":
+        form = ReviewForm(request.POST)
+        if form.is_valid():
+            review = form.save(commit=False)
+            review.job = job
+            review.reviewer = request.user
+            try:
+                with transaction.atomic():
+                    review.save()
+            except IntegrityError:
+                messages.error(request, "You have already reviewed this job.")
+                return redirect("job_detail", job_id=job.pk)
+            messages.success(request, "Thank you! Your review was saved.")
+            return redirect("job_detail", job_id=job.pk)
+    else:
+        form = ReviewForm()
+
+    return render(request, "jobs/review_form.html", {"form": form, "job": job})

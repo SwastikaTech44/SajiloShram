@@ -52,3 +52,21 @@ class WorkerProfile(models.Model):
 
     def __str__(self):
         return f"Profile of {self.user.username}"
+
+
+    def rating_summary(self):
+        from jobs.models import Review
+
+        return Review.objects.filter(job__worker=self.user).aggregate(
+            average=models.Avg("rating"),
+            count=models.Count("id"),
+        )
+
+    def recent_reviews(self):
+        from jobs.models import Review
+
+        return (
+            Review.objects.filter(job__worker=self.user)
+            .select_related("reviewer")
+            .order_by("-created_at")[:5]
+        )
