@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block title %}Verify my NID{% endblock %}
+{% block content %}
+<div class="card">
+  <h2>Verify my NID</h2>
+
+  {% if state == 'verified' %}
+    <p><strong>✓ Your NID is verified.</strong> Employers can see the verified badge on your profile.</p>
+  {% elif state == 'review' %}
+    <p><strong>Under review.</strong> An admin will check your submission soon. You can submit again to replace it.</p>
+  {% elif state == 'rejected' %}
+    <p><strong>Your last submission was rejected.</strong> Please check the number and the photo, then submit again.</p>
+  {% else %}
+    <p>You have not submitted your NID yet.</p>
+  {% endif %}
+
+  {% if form %}
+    <p><em>Demo only: use a made-up number and a sample image, never a real ID card.</em></p>
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit" class="btn">Submit for verification</button>
+    </form>
+  {% endif %}
+
+  <p><a href="{% url 'dashboard' %}">← Back to dashboard</a></p>
+</div>
+{% endblock %}

@@ -5,8 +5,18 @@
   <h2>{{ worker.user.username }}</h2>
   <p>Daily rate: Rs. {{ worker.daily_rate }}</p>
   {% if worker.municipality %}<p>Location: {{ worker.municipality }}, Ward {{ worker.ward_no }}</p>{% endif %}
+  
   <p>Skills: {% for skill in worker.skills.all %}{{ skill.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
-  <p>NID status: <strong>{{ worker.get_nid_status_display }}</strong></p>
+
+  {% if worker.nid_status == 'verified' %}
+    <p><strong style="color:#1b5e20;">✓ NID verified</strong></p>
+  {% else %}
+    <p>NID: <em>Not verified</em></p>
+  {% endif %}
+
+  {% if user == worker.user %}
+    <p><a href="{% url 'verify_nid' %}">Manage my NID verification</a></p>
+  {% endif %}
 
   {% with summary=worker.rating_summary %}
     {% if summary.count %}

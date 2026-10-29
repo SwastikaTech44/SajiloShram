@@ -1,10 +1,11 @@
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_POST
 
 from .filters import WorkerFilter
-from .forms import WorkerProfileForm
+from .forms import WorkerProfileForm, NIDSubmissionForm
 from .models import WorkerProfile
 
 
@@ -75,3 +76,40 @@ def upload_audio(request):
 @login_required
 def record_intro(request):
     return render(request, 'workers/record_intro.html')
+
+
+@login_required
+def verify_nid(request):
+    if request.user.role != "worker":
+        messages.error(request, "Only workers can submit an NID.")
+        return redirect("dashboard")
+
+    profile = WorkerProfile.objects.filter(user=request.user).first()
+    if profile is None:
+        messages.error(request, "Please complete your worker profile first.")
+        return redirect("edit_profile")
+
+    if profile.nid_status == WorkerProfile.NIDStatus.VERIFIED:
+        state = "verified"
+    elif profile.nid_status == WorkerProfile.NIDStatus.REJECTED:
+        state = "rejected"
+    elif profile.nid_number:
+        state = "review"
+    else:
+        state = "none"
+
+    if state == "verified":
+        return render(request, "workers/verify_nid.html", {"state": state, "form": None})
+
+    if request.method == "POST":
+        form = NIDSubmissionForm(request.POST, request.FILES, instance=profile)
+        if form.is_valid():
+            submission = form.save(commit=False)
+            submission.nid_status = WorkerProfile.NIDStatus.PENDING
+            submission.save(update_fields=["nid_number", "nid_photo", "nid_status"])
+            messages.success(request, "NID submitted. An admin will review it soon.")
+            return redirect("dashboard")
+    else:
+        form = NIDSubmissionForm(instance=profile)
+
+    return render(request, "workers/verify_nid.html", {"state": state, "form": form})
