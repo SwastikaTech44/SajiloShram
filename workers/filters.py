@@ -1,6 +1,7 @@
 import django_filters
-from .models import WorkerProfile, District, Municipality, Skill
+from django import forms
 
+from .models import WorkerProfile, District, Municipality, Skill
 
 class WorkerFilter(django_filters.FilterSet):
     district = django_filters.ModelChoiceFilter(
@@ -24,6 +25,17 @@ class WorkerFilter(django_filters.FilterSet):
         label='Max daily rate (Rs.)',
     )
 
+    verified_only = django_filters.BooleanFilter(
+        method='filter_verified',
+        label='Verified workers only',
+        widget=forms.CheckboxInput,
+    )
+
     class Meta:
         model = WorkerProfile
         fields = []
+
+    def filter_verified(self, queryset, name, value):
+        if value:
+            return queryset.filter(nid_status=WorkerProfile.NIDStatus.VERIFIED)
+        return queryset   

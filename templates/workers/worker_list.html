@@ -18,6 +18,7 @@
       {% for worker in workers %}
         <li style="margin-bottom:12px;">
           <a href="{% url 'worker_detail' worker.id %}"><strong>{{ worker.user.username }}</strong></a>
+          {% if worker.nid_status == 'verified' %}<span style="color:#1b5e20; font-weight:bold;">✓ Verified</span>{% endif %}
           {% if worker.audio_intro %}🎤{% endif %}<br>
           Rs. {{ worker.daily_rate }}/day<br>
           {% if worker.municipality %}{{ worker.municipality }}, Ward {{ worker.ward_no }}<br>{% endif %}
