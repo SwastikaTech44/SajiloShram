@@ -1,3 +1,4 @@
+from django.utils import timezone
 from django.conf import settings
 from django.db import models
 
@@ -22,12 +23,22 @@ class Job(models.Model):
     worker = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='jobs_taken')
     description = models.TextField()
     agreed_wage = models.PositiveIntegerField(help_text='Agreed wage in NPR')
+
+    start_date = models.DateField(null=True, blank=True, help_text='Day the work starts')
+    work_location = models.CharField(max_length=200, blank=True, help_text='Where the work will happen')
+    terms = models.TextField(blank=True, help_text='Extra conditions agreed by both sides')
+    accepted_at = models.DateTimeField(null=True, blank=True, editable=False)
+
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.REQUESTED)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"{self.worker} for {self.employer} - {self.status}"
+
+    @property
+    def agreement_ref(self):
+        return f"SR-{self.pk:06d}"
 
     def can_move_to(self, new_status):
         return new_status in self.ALLOWED_TRANSITIONS.get(self.status, [])
@@ -36,8 +47,11 @@ class Job(models.Model):
         if not self.can_move_to(new_status):
             raise ValueError(f"Cannot go from {self.status} to {new_status}.")
         self.status = new_status
-        self.save(update_fields=["status", "updated_at"])
-
+        update_fields = ["status", "updated_at"]
+        if new_status == self.Status.ACCEPTED:
+            self.accepted_at = timezone.now()
+            update_fields.append("accepted_at")
+        self.save(update_fields=update_fields)
 
 class Review(models.Model):
     job = models.OneToOneField(Job, on_delete=models.CASCADE, related_name='review')

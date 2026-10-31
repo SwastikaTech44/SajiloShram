@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'workers',
     'jobs',
     'payments',
+    'rest_framework.authtoken',
 ]
 
 MIDDLEWARE = [
@@ -154,3 +155,16 @@ PAYMENT_GATEWAY = os.getenv('PAYMENT_GATEWAY', 'mock')
 ESEWA_PRODUCT_CODE = os.getenv('ESEWA_PRODUCT_CODE', 'EPAYTEST')
 ESEWA_SECRET_KEY = os.getenv('ESEWA_SECRET_KEY', '')
 ESEWA_FORM_URL = os.getenv('ESEWA_FORM_URL', '')
+
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 10,
+}
