@@ -7,3 +7,4 @@ admin.site.register(Review)
 class JobAdmin(admin.ModelAdmin):
     list_display = ("worker", "employer", "agreed_wage", "status", "created_at")
     list_filter = ("status",)
+    readonly_fields = ("accepted_at",)

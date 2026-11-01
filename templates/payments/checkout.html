@@ -6,6 +6,7 @@
   <p>Job: {{ job.description|truncatechars:60 }}</p>
   <p>Worker: <strong>{{ job.worker.username }}</strong></p>
   <p>Amount: <strong>Rs. {{ job.agreed_wage }}</strong></p>
+  <p><a href="{% url 'job_agreement' job.pk %}">View the agreement</a></p>
   <p>Your money is held safely by SajiloShram. The worker is paid only after you confirm the work is done.</p>
 
   <form method="post">

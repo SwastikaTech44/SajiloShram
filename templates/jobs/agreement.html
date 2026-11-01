@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block title %}Agreement {{ job.agreement_ref }}{% endblock %}
+{% block content %}
+<style>
+  @media print {
+    header, .no-print { display: none; }
+    body { background: #fff; }
+    main { max-width: 100%; margin: 0; }
+    .card { box-shadow: none; }
+  }
+</style>
+
+<div class="card">
+  <h2>Work agreement</h2>
+  <p><strong>Reference:</strong> {{ job.agreement_ref }}</p>
+  <p><em>Demonstration agreement for a student project. It is not a legally binding contract.</em></p>
+
+  <h3>Parties</h3>
+  <p>Employer: {{ job.employer.get_full_name|default:job.employer.username }}</p>
+  <p>Worker: {{ job.worker.get_full_name|default:job.worker.username }}</p>
+
+  <h3>Work</h3>
+  <p>{{ job.description|linebreaksbr }}</p>
+  <p>Start date: {% if job.start_date %}{{ job.start_date|date:"j F Y" }}{% else %}Not set{% endif %}</p>
+  <p>Location: {% if job.work_location %}{{ job.work_location }}{% else %}Not set{% endif %}</p>
+
+  <h3>Payment</h3>
+  <p>Agreed wage: <strong>Rs. {{ job.agreed_wage }}</strong></p>
+  <p>After the worker accepts, the employer pays this amount into escrow. SajiloShram releases it to the worker's wallet when the employer confirms that the work is done.</p>
+
+  {% if job.terms %}
+    <h3>Extra terms</h3>
+    <p>{{ job.terms|linebreaksbr }}</p>
+  {% endif %}
+
+  <h3>Status</h3>
+  <p>Current status: <strong>{{ job.get_status_display }}</strong></p>
+  <p>Created: {{ job.created_at|date:"j F Y, H:i" }}</p>
+  <p>Acceptance:
+    {% if job.accepted_at %}
+      accepted by {{ job.worker.username }} on {{ job.accepted_at|date:"j F Y, H:i" }}
+    {% elif job.status == 'requested' %}
+      waiting for the worker to accept
+    {% elif job.status == 'declined' %}
+      declined by the worker
+    {% else %}
+      not recorded
+    {% endif %}
+  </p>
+
+  <p class="no-print"><button type="button" class="btn" onclick="window.print()">Print or save as PDF</button></p>
+  <p class="no-print"><a href="{% url 'job_detail' job.pk %}">← Back to the job</a></p>
+</div>
+{% endblock %}

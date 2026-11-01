@@ -125,3 +125,12 @@ def review_job(request, job_id):
         form = ReviewForm()
 
     return render(request, "jobs/review_form.html", {"form": form, "job": job})
+
+@login_required
+def job_agreement(request, job_id):
+    job = get_object_or_404(
+        Job.objects.select_related('employer', 'worker'),
+        Q(employer=request.user) | Q(worker=request.user),
+        id=job_id,
+    )
+    return render(request, 'jobs/agreement.html', {'job': job})

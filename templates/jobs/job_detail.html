@@ -6,7 +6,11 @@
   <p>Employer: {{ job.employer.username }}</p>
   <p>Worker: {{ job.worker.username }}</p>
   <p>Wage: Rs. {{ job.agreed_wage }}</p>
+  {% if job.start_date %}<p>Start date: {{ job.start_date|date:"j F Y" }}</p>{% endif %}
+  {% if job.work_location %}<p>Location: {{ job.work_location }}</p>{% endif %}
+  {% if job.terms %}<p>Extra terms: {{ job.terms|linebreaksbr }}</p>{% endif %}
   <p>Status: <strong>{{ job.get_status_display }}</strong></p>
+  <p><a href="{% url 'job_agreement' job.pk %}">View agreement {{ job.agreement_ref }}</a></p>
 
   {% if user == job.worker and job.status == 'requested' %}
     <form method="post" action="{% url 'respond_job' job.pk %}">

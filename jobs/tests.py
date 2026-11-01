@@ -1,9 +1,11 @@
+from datetime import timedelta
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 
-from accounts.factories import make_job, make_user
+from accounts.factories import make_job, make_user, make_worker_profile
+from jobs.forms import HireRequestForm
 from jobs.models import Job, Review
-
 
 class JobStateMachineTests(TestCase):
     def setUp(self):
@@ -87,3 +89,70 @@ class ReviewTests(TestCase):
         self.client.force_login(self.employer)
         self.client.post(self.url, {"rating": 9, "comment": "Hacked"})
         self.assertEqual(Review.objects.count(), 0)
+
+
+class AgreementTests(TestCase):
+    def setUp(self):
+        self.employer = make_user("emp", "employer")
+        self.worker = make_user("wrk", "worker")
+        self.job = make_job(self.employer, self.worker)
+
+    def _form(self, start):
+        return HireRequestForm({
+            "description": "Paint two rooms",
+            "agreed_wage": 2000,
+            "start_date": start.isoformat(),
+            "work_location": "Waling-7",
+            "terms": "",
+        })
+
+    def test_accepting_records_the_time(self):
+        self.assertIsNone(self.job.accepted_at)
+        self.job.move_to(Job.Status.ACCEPTED)
+        self.job.refresh_from_db()
+        self.assertIsNotNone(self.job.accepted_at)
+
+    def test_later_steps_do_not_change_the_accepted_time(self):
+        self.job.move_to(Job.Status.ACCEPTED)
+        first = Job.objects.get(pk=self.job.pk).accepted_at
+        self.job.move_to(Job.Status.FUNDED)
+        self.assertEqual(Job.objects.get(pk=self.job.pk).accepted_at, first)
+
+    def test_stranger_cannot_open_the_agreement(self):
+        stranger = make_user("stranger", "employer")
+        self.client.force_login(stranger)
+        response = self.client.get(reverse("job_agreement", args=[self.job.pk]))
+        self.assertEqual(response.status_code, 404)
+
+    def test_employer_and_worker_can_open_the_agreement(self):
+        url = reverse("job_agreement", args=[self.job.pk])
+        for user in (self.employer, self.worker):
+            self.client.force_login(user)
+            response = self.client.get(url)
+            self.assertContains(response, self.job.agreement_ref)
+
+    def test_start_date_in_the_past_is_rejected(self):
+        form = self._form(timezone.localdate() - timedelta(days=1))
+        self.assertFalse(form.is_valid())
+        self.assertIn("start_date", form.errors)
+
+    def test_future_start_date_is_accepted(self):
+        form = self._form(timezone.localdate() + timedelta(days=1))
+        self.assertTrue(form.is_valid(), form.errors)
+
+    def test_hire_request_saves_the_terms(self):
+        profile = make_worker_profile(self.worker)
+        Job.objects.all().delete()
+        self.client.force_login(self.employer)
+        start = timezone.localdate() + timedelta(days=3)
+        self.client.post(reverse("request_hire", args=[profile.pk]), {
+            "description": "Paint two rooms",
+            "agreed_wage": 3000,
+            "start_date": start.isoformat(),
+            "work_location": "Waling-7",
+            "terms": "Bring your own brushes",
+        })
+        job = Job.objects.get()
+        self.assertEqual(job.start_date, start)
+        self.assertEqual(job.work_location, "Waling-7")
+        self.assertEqual(job.worker, self.worker)
