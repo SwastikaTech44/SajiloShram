@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+{% block title %}SajiloShram - Trusted local workers{% endblock %}
+{% block content %}
+<style>
+  main { max-width: 1000px; }
+  .section { margin-top: 24px; }
+  .section > h2 { margin: 0 0 12px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+  .muted { font-size: 14px; color: #6b7280; }
+
+  .hero { background: var(--brand); color: #fff; border-top-color: var(--accent); text-align: center; padding: 28px 20px; }
+  .hero h1 { font-size: 28px; line-height: 1.25; margin: 0 0 8px; color: #fff; }
+  .hero .tagline { font-size: 18px; color: var(--accent); margin: 0 0 12px; }
+  .hero p { margin: 0 0 18px; line-height: 1.5; }
+  .search-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; max-width: 640px; margin: 0 auto; }
+  .search-row select, .search-row .btn { margin: 0; }
+  .hero .login-hint { margin: 14px 0 0; font-size: 14px; opacity: .9; }
+  .hero .login-hint a { color: #fff; }
+
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; text-align: center; }
+  .stat strong { display: block; font-size: 28px; color: var(--brand); }
+  .stat span { font-size: 14px; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 10px; }
+  .chip { display: inline-block; padding: 10px 16px; background: #fff; border: 1px solid var(--brand); border-radius: 999px; text-decoration: none; font-weight: bold; }
+  .chip:hover { background: var(--brand); color: #fff; }
+
+  a.worker-card { display: block; text-decoration: none; color: var(--text); }
+  a.worker-card:hover { box-shadow: 0 3px 10px rgba(0,0,0,.2); }
+  .worker-card .name { font-size: 18px; font-weight: bold; color: var(--brand); }
+  .worker-card p { margin: 6px 0 0; }
+  .verified { color: #1b5e20; font-weight: bold; font-size: 14px; }
+
+  .step-number { width: 34px; height: 34px; border-radius: 50%; background: var(--accent); color: var(--text); font-weight: bold; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; }
+  .trust-item { margin: 0 0 12px; line-height: 1.4; }
+  .trust-item strong { color: var(--brand); }
+  .review p { margin: 0 0 8px; line-height: 1.4; }
+
+  .cta-band { background: var(--accent); border-top-color: var(--brand); text-align: center; }
+  .cta-band h2 { color: var(--text); margin-top: 0; }
+  .cta-band .btn { max-width: 320px; margin: 0 auto; }
+
+  .site-footer { margin: 28px 0 8px; text-align: center; font-size: 13px; color: #6b7280; line-height: 1.6; }
+</style>
+
+<div class="card hero">
+  <h1>Find trusted local workers, right in your own ward</h1>
+  <p class="tagline">आफ्नै वडामा, भरपर्दो कामदार।</p>
+  <p>Masons, painters, electricians and farm workers near you, with your payment protected until the work is done.</p>
+
+  <form method="get" action="{% url 'worker_list' %}">
+    <div class="search-row">
+      <select name="district" aria-label="District">
+        <option value="">All districts</option>
+        {% for d in districts %}<option value="{{ d.pk }}">{{ d.name }}</option>{% endfor %}
+      </select>
+      <select name="skill" aria-label="Skill">
+        <option value="">Any skill</option>
+        {% for s in skills %}<option value="{{ s.pk }}">{{ s.name }}</option>{% endfor %}
+      </select>
+      <button class="btn btn-accent" type="submit">Find workers</button>
+    </div>
+  </form>
+  <p class="login-hint">Searching needs a free account. <a href="{% url 'register' %}">Register</a> or <a href="{% url 'login' %}">log in</a>.</p>
+</div>
+
+<div class="card section">
+  <div class="stats">
+    <div class="stat"><strong>{{ stats.districts }}</strong><span>Districts</span></div>
+    <div class="stat"><strong>{{ stats.skills }}</strong><span>Skills listed</span></div>
+    <div class="stat"><strong>{{ stats.verified_workers }}</strong><span>Verified workers</span></div>
+  </div>
+</div>
+
+{% if skills %}
+<div class="section">
+  <h2>Browse by skill</h2>
+  <div class="chips">
+    {% for s in skills %}
+      <a class="chip" href="{% url 'worker_list' %}?skill={{ s.pk }}">{{ s.name }}</a>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+{% if featured %}
+<div class="section">
+  <h2>Featured verified workers</h2>
+  <div class="grid">
+    {% for w in featured %}
+      <a class="card worker-card" href="{% url 'worker_detail' w.id %}">
+        <div><span class="name">{{ w.user.username }}</span> <span class="verified">✓ Verified</span></div>
+        <p>{% for sk in w.skills.all %}{{ sk.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
+        {% if w.municipality %}<p class="muted">{{ w.municipality }}</p>{% endif %}
+        <p><strong>Rs. {{ w.daily_rate }}</strong> per day</p>
+        {% with summary=w.rating_summary %}
+          <p class="muted">{% if summary.count %}★ {{ summary.average|floatformat:1 }}/5 ({{ summary.count }} review{{ summary.count|pluralize }}){% else %}New on SajiloShram{% endif %}</p>
+        {% endwith %}
+      </a>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<div class="section">
+  <h2>How it works</h2>
+  <div class="grid">
+    <div class="card"><div class="step-number">1</div><strong>Find a worker</strong><p>Search by district, municipality, ward, skill and daily rate. Listen to a voice introduction.</p></div>
+    <div class="card"><div class="step-number">2</div><strong>Agree on the terms</strong><p>Send a request with the wage, start date and place. The worker reads it and accepts.</p></div>
+    <div class="card"><div class="step-number">3</div><strong>Pay into escrow</strong><p>The wage is held safely while the work is done.</p></div>
+    <div class="card"><div class="step-number">4</div><strong>Confirm and review</strong><p>Confirm the work and the money goes to the worker. Then leave an honest review.</p></div>
+  </div>
+</div>
+
+<div class="card section">
+  <h2 style="margin-top:0;">Why people trust SajiloShram</h2>
+  <p class="trust-item"><strong>✓ Verified workers.</strong> Workers submit their ID for review and earn a verified badge.</p>
+  <p class="trust-item"><strong>🔒 Escrow payment.</strong> Money is released only after the employer confirms the work.</p>
+  <p class="trust-item"><strong>★ Honest reviews.</strong> Only employers who finished a job can rate a worker.</p>
+  <p class="trust-item"><strong>🎤 Voice introductions.</strong> Hear a worker before you hire, no reading needed.</p>
+</div>
+
+{% if reviews %}
+<div class="section">
+  <h2>What people say</h2>
+  <div class="grid">
+    {% for r in reviews %}
+      <div class="card review">
+        <p><strong>★ {{ r.rating }}/5</strong></p>
+        <p>“{{ r.comment|truncatechars:140 }}”</p>
+        <p class="muted">{{ r.reviewer.username }}, about {{ r.job.worker.username }}</p>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<div class="card section cta-band">
+  <h2>Are you a worker?</h2>
+  <p>Create a free profile, record a short voice introduction, get verified, and receive your wage in your SajiloShram wallet.</p>
+  <a class="btn" href="{% url 'register' %}">Register as a worker</a>
+</div>
+
+<p class="site-footer">
+  SajiloShram is an independent student project (BIM semester project) and is not affiliated with any other service.<br>
+  Payments run in a test environment and ID checks are simulated.<br>
+  Built by [Swastika Aryal & Susmita Baral].
+</p>
+{% endblock %}

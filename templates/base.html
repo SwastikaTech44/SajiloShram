@@ -21,6 +21,9 @@
     nav { display: flex; align-items: center; gap: 14px; }
     nav form { margin: 0; }
     .nav-toggle { display: none; font-size: 26px; line-height: 1; padding: 4px 8px; }
+    .visitor-links { display: flex; align-items: center; gap: 14px; }
+    header a.join { background: var(--accent); color: var(--text); padding: 8px 14px; border-radius: 6px; font-weight: bold; }
+    header a.join:hover { background: var(--accent-dark); color: var(--text); }
 
     @media (max-width: 600px) {
       .nav-toggle { display: block; }
@@ -68,6 +71,11 @@
           <button type="submit">Logout</button>
         </form>
       </nav>
+    {% else %}
+      <div class="visitor-links">
+        <a href="{% url 'login' %}">Login</a>
+        <a href="{% url 'register' %}" class="join">Register</a>
+      </div>
     {% endif %}
   </header>
   <main>
